@@ -1,4 +1,4 @@
 module.exports = {
   require: 'coffeescript/register',
-  timeout: 200000
+  timeout: 300000
 }

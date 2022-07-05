@@ -5,11 +5,11 @@ _ = require 'lodash'
 describe 'hsi', ->
   data = []
 
-  it 'hsi constituents', ->
+  it 'hsi tech constituents', ->
     peers = new Peers
       browser: await browser()
       mqtt: stockMqtt()
-    list = await peers.constituent 'http://www.aastocks.com/en/stocks/market/index/hk-index-con.aspx?index=HSI'
+    list = await peers.constituent 'http://www.aastocks.com/en/stocks/market/index/hk-index-con.aspx?index=HSTECH'
     for stock in list
       data.push stock['symbol']
     console.log data
