@@ -4,7 +4,7 @@
   "description": "hsi related data",
   "main": "index.coffee",
   "scripts": {
-    "test": "mocha test/*.coffee"
+    "test": "MQTTCLIENT=test mocha test/*.coffee"
   },
   "repository": {
     "type": "git",

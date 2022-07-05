@@ -19,3 +19,4 @@ describe 'hsi', ->
       max: _.maxBy breadth, 'percent'
       min:_.minBy breadth, 'percent'
       mean: _.meanBy breadth, 'percent'
+    peers.mqtt.end()
