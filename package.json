@@ -4,7 +4,7 @@
   "description": "hsi related data",
   "main": "index.coffee",
   "scripts": {
-    "test": "MQTTCLIENT=test mocha test/*.coffee"
+    "test": "mocha test/*.coffee"
   },
   "repository": {
     "type": "git",
@@ -17,7 +17,9 @@
   },
   "homepage": "https://github.com/twhtanghk/hsidata#readme",
   "devDependencies": {
-    "mocha": "^10.0.0"
+    "mocha": "^10.0.0",
+    "superagent": "^8.0.0",
+    "supertest": "^6.2.4"
   },
   "dependencies": {
     "aastocks": "github:twhtanghk/aastocks"

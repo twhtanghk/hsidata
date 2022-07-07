@@ -9,7 +9,7 @@ describe 'hsi', ->
     peers = new Peers
       browser: await browser()
       mqtt: stockMqtt()
-    list = await peers.constituent 'http://www.aastocks.com/en/stocks/market/index/hk-index-con.aspx?index=HSI'
+    list = await peers.constituent process.env.HSI
     for stock in list
       data.push stock['symbol']
     console.log data
