@@ -4,6 +4,7 @@ _ = require 'lodash'
 
 class Strategy extends Transform
   df: []
+  action: []
 
   constructor: ({@capital, @stopLossPercent}) ->
     super
@@ -14,10 +15,24 @@ class Strategy extends Transform
     @df.push data
 
   buyRule: (data) ->
-    console.debug "buy at #{data.date}"
+    @action.push
+      action: 'buy'
+      data: data
 
   sellRule: (data) ->
-    console.debug "sell at #{data.date}"
+    @action.push
+      action: 'sell'
+      data: data
+
+  analysis: ->
+    sum = 0
+    for {action, data} in @action
+      switch action
+        when 'buy'
+          sum -= data.close
+        when 'sell'
+          sum += data.close
+    sum
 
 class EMAStrategy extends Strategy
   crossUp: false
@@ -25,25 +40,34 @@ class EMAStrategy extends Strategy
   crossDn: false
   
   _transform: (data, encoding, callback) ->
-    super data, encoding, callback
+
+    # keep last 120 records only
     @df = @df[-120..]
+
+    # extract close price
     close = @df.map ({close}) ->
       close
+
+    # get ema 20, 60, 120 
     if @df.length >= 20
-      data = _.extend data, ema20: (await ema(close[-20..], 20))[0]
+      _.extend data, ema20: (await ema(close[-20..], 20))[0]
     if @df.length >= 60
-      data = _.extend data, ema60: (await ema(close[-60..], 60))[0]
+      _.extend data, ema60: (await ema(close[-60..], 60))[0]
     if @df.length >= 120
-      data = _.extend data, ema120: (await ema(close[-120..], 120))[0]
-    {ema20, ema60, ema120} = data
-    if ema20 > ema60 and not @crossUp
-      @crossUp = true
-      @crossDn = false
+      _.extend data, ema120: (await ema(close[-120..], 120))[0]
+
+    [..., last] = @df
+
+    # fire buyRule if current ema20 > ema60 first met
+    if last?.ema20 <= last?.ema60 and data.ema20 > data.ema60
       @buyRule data
-    if ema20 < ema60 and not @crossDn
-      @crossDn = true
-      @crossUp = false
+
+    # fire sellRule if current ema20 < ema60 first met
+    if last?.ema20 >= last?.ema60 and data.ema20 < data.ema60
       @sellRule data
+
+    super data, encoding, callback
+
     callback null, data
 
 module.exports = {Strategy, EMAStrategy}

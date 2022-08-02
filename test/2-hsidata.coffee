@@ -26,6 +26,10 @@ describe 'hsi', ->
   it 'strategy', (done) ->
     new Price {data}
       .pipe new EMAStrategy {capital: 50, stopLossPercent: 0.05}
+      .on 'finish', ->
+        for i in @action
+          console.log JSON.stringify i
+        console.log "sum: #{@analysis()}"
       .pipe new Writable
         objectMode: true
         write: (data, encoding, callback) ->
