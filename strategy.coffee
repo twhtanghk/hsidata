@@ -3,6 +3,7 @@ _ = require 'lodash'
 {ema} = require 'ta.js'
 
 class Strategy extends Transform
+  start: null
   df: []
   action: []
 
@@ -12,6 +13,7 @@ class Strategy extends Transform
       writableObjectMode: true
 
   _transform: (data, encoding, callback) ->
+    @start ?= data.date
     @df.push data
 
   buyRule: (data) ->

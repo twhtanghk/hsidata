@@ -29,7 +29,8 @@ describe 'hsi', ->
       .on 'finish', ->
         for i in @action
           console.log JSON.stringify i
-        console.log "sum: #{@analysis()}"
+        [..., last] = @df
+        console.log "sum of actions within #{@start} - #{last.date} : #{@analysis()}"
       .pipe new Writable
         objectMode: true
         write: (data, encoding, callback) ->
