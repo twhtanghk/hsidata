@@ -37,27 +37,23 @@ class Strategy extends Transform
     sum
 
 class EMAStrategy extends Strategy
-  crossUp: false
-
-  crossDn: false
-  
   _transform: (data, encoding, callback) ->
-
-    # keep last 120 records only
-    @df = @df[-120..]
 
     # extract close price
     close = @df.map ({close}) ->
       close
+    close.push data.close
 
     # get ema 20, 60, 120 
-    if @df.length >= 20
-      _.extend data, ema20: (await ema(close[-20..], 20))[0]
-    if @df.length >= 60
-      _.extend data, ema60: (await ema(close[-60..], 60))[0]
-    if @df.length >= 120
-      _.extend data, ema120: (await ema(close[-120..], 120))[0]
-
+    [ema20, ema60, ema120] = [
+      await ema close, 20
+      await ema close, 60
+      await ema close, 120
+    ]
+    curr =
+      ema20: ema20[ema20.length - 1]
+      ema60: ema60[ema60.length - 1]
+      ema120: ema120[ema120.length - 1]
     [..., last] = @df
 
     # fire buyRule if current ema20 > ema60 first met
@@ -69,6 +65,9 @@ class EMAStrategy extends Strategy
       @sellRule data
 
     super data, encoding, callback
+
+    # keep last 120 records only
+    @df = @df[-120..]
 
     callback null, data
 

@@ -12,4 +12,4 @@ describe "get #{symbol} price data", ->
       .map (price) ->
         db
           .get 'price'
-          .insert _.extend price, date: new Date price.date * 1000
+          .insert _.extend price, {symbol: symbol, date: new Date price.date * 1000}
