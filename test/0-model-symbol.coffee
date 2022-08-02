@@ -10,4 +10,6 @@ describe "get #{symbol} price data", ->
     stock = new Stock symbol
     data = (await stock.historicalPrice())
       .map (price) ->
-        db.insert _.extend price, date: new Date price.date * 1000
+        db
+          .get 'price'
+          .insert _.extend price, date: new Date price.date * 1000
