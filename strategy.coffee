@@ -1,13 +1,14 @@
 _ = require 'lodash'
 {Transform} = require 'stream'
 {ema} = require 'ta.js'
+Binance = require('binance-api-node').default
 
 class Strategy extends Transform
   start: null
   df: []
   action: []
 
-  constructor: ({@capital, @stopLossPercent}) ->
+  constructor: ->
     super
       readableObjectMode: true
       writableObjectMode: true
@@ -20,11 +21,13 @@ class Strategy extends Transform
     @action.push
       action: 'buy'
       data: data
+    @emit 'buy', data
 
   sellRule: (data) ->
     @action.push
       action: 'sell'
       data: data
+    @emit 'sell', data
 
   analysis: ->
     sum = 0
@@ -75,4 +78,21 @@ class EMAStrategy extends Strategy
 
     callback null, data
 
-module.exports = {Strategy, EMAStrategy}
+class BinanceSrc extends Strategy
+  constructor: ({@symbol, @interval}) ->
+    super() 
+    @client = Binance
+      apiKey: process.env.BINAPI
+      apiSecret: process.env.BINSECRET
+    @client.ws.candles @symbol, @interval, (candle) =>
+      {eventTime, open, high, low, close, volume} = candle
+      @push
+        date: new Date eventTime
+        open: parseFloat open
+        high: parseFloat high
+        low: parseFloat low
+        close: parseFloat close
+        volume: parseFloat volume
+        symbol: @symbol
+
+module.exports = {Strategy, EMAStrategy, BinanceSrc}
