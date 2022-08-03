@@ -1,5 +1,5 @@
 _ = require 'lodash'
-{Transform} = require 'stream'
+{Readable, Transform} = require 'stream'
 {ema} = require 'ta.js'
 Binance = require('binance-api-node').default
 
@@ -39,7 +39,7 @@ class Strategy extends Transform
           sum += data.close
     sum
 
-class EMAStrategy extends Strategy
+class EMA extends Strategy
   _transform: (data, encoding, callback) ->
 
     # extract close price
@@ -53,24 +53,11 @@ class EMAStrategy extends Strategy
       await ema close, 60
       await ema close, 120
     ]
-    curr =
+    _.extend data,
       ema20: ema20[ema20.length - 1]
       ema60: ema60[ema60.length - 1]
       ema120: ema120[ema120.length - 1]
-    last =
-      ema20: ema20[ema20.length - 2]
-      ema60: ema60[ema60.length - 2]
-      ema120: ema120[ema120.length - 2]
-
-    # fire buyRule if current ema20 > ema60 first met
-    if last.ema20 <= last.ema60 and curr.ema20 > curr.ema60
-      @buyRule data
-
-    # fire sellRule if current ema20 < ema60 first met
-    if last?.ema20 >= last?.ema60 and curr.ema20 < curr.ema60
-      @sellRule data
-
-    _.extend data, ema: curr
+      
     super data, encoding, callback
 
     # keep last 120 records only
@@ -78,15 +65,36 @@ class EMAStrategy extends Strategy
 
     callback null, data
 
-class BinanceSrc extends Strategy
+class EMACrossover extends Strategy
+  _transform: (data, encoding, callback) ->
+    super data, encoding, callback
+
+    # keep last 2 records only
+    @df = @df[-2..]
+
+    curr = @df[@df.length - 1]
+    last = @df[@df.length - 2]
+
+    # fire buyRule if current ema20 > ema60 first met
+    if last?.ema20 <= last?.ema60 and curr.ema20 > curr.ema60
+      @buyRule data
+
+    # fire sellRule if current ema20 < ema60 first met
+    if last?.ema20 >= last?.ema60 and curr.ema20 < curr.ema60
+      @sellRule data
+
+    callback null, data
+  
+class BinanceSrc extends Readable
   constructor: ({@symbol, @interval}) ->
-    super() 
+    super objectMode: true
+
     @client = Binance
       apiKey: process.env.BINAPI
       apiSecret: process.env.BINSECRET
     @client.ws.candles @symbol, @interval, (candle) =>
       {eventTime, open, high, low, close, volume} = candle
-      @push
+      @emit 'data',
         date: new Date eventTime
         open: parseFloat open
         high: parseFloat high
@@ -95,4 +103,12 @@ class BinanceSrc extends Strategy
         volume: parseFloat volume
         symbol: @symbol
 
-module.exports = {Strategy, EMAStrategy, BinanceSrc}
+  read: (size) ->
+    @pause()
+
+module.exports = {
+  BinanceSrc
+  Strategy
+  EMA
+  EMACrossover
+}

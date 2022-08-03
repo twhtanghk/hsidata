@@ -1,10 +1,11 @@
 {Writable} = require 'stream'
-{BinanceSrc, EMAStrategy} = require '../strategy'
+{BinanceSrc, EMA, EMACrossover} = require '../strategy'
 
 describe 'binance', ->
   it 'ethbtc in 1m', ->
     new BinanceSrc {symbol: 'ETHBUSD', interval: '1m'}
-      .pipe new EMAStrategy()
+      .pipe new EMA()
+      .pipe new EMACrossover()
       .on 'buy', (data) ->
         console.debug "buy #{@analysis()} #{JSON.stringify data}"
       .on 'sell', (data) ->
