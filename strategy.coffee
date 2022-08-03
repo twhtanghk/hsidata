@@ -54,16 +54,20 @@ class EMAStrategy extends Strategy
       ema20: ema20[ema20.length - 1]
       ema60: ema60[ema60.length - 1]
       ema120: ema120[ema120.length - 1]
-    [..., last] = @df
+    last =
+      ema20: ema20[ema20.length - 2]
+      ema60: ema60[ema60.length - 2]
+      ema120: ema120[ema120.length - 2]
 
     # fire buyRule if current ema20 > ema60 first met
-    if last?.ema20 <= last?.ema60 and data.ema20 > data.ema60
+    if last.ema20 <= last.ema60 and curr.ema20 > curr.ema60
       @buyRule data
 
     # fire sellRule if current ema20 < ema60 first met
-    if last?.ema20 >= last?.ema60 and data.ema20 < data.ema60
+    if last?.ema20 >= last?.ema60 and curr.ema20 < curr.ema60
       @sellRule data
 
+    _.extend data, ema: curr
     super data, encoding, callback
 
     # keep last 120 records only
