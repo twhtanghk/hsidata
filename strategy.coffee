@@ -1,6 +1,7 @@
 _ = require 'lodash'
 {Readable, Transform} = require 'stream'
 {ema} = require 'ta.js'
+volatility = require 'volatility'
 Binance = require('binance-api-node').default
 
 class Strategy extends Transform
@@ -65,6 +66,29 @@ class EMA extends Strategy
 
     callback null, data
 
+class Volatility extends Strategy
+  _transform: (data, encoding, callback) ->
+
+    # extract close price
+    close = @df.map ({close}) ->
+      close
+    close.push data.close
+
+    # get ema 20, 60, 120 
+    [vol20, vol60, vol120] = [
+      volatility close[-20..]
+      volatility close[-60..]
+      volatility close[-120..]
+    ]
+    _.extend data, {vol20, vol60, vol120}
+
+    super data, encoding, callback
+
+    # keep last 120 records only
+    @df = @df[-120..]
+
+    callback null, data
+
 class EMACrossover extends Strategy
   _transform: (data, encoding, callback) ->
     super data, encoding, callback
@@ -110,5 +134,6 @@ module.exports = {
   BinanceSrc
   Strategy
   EMA
+  Volatility
   EMACrossover
 }

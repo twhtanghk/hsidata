@@ -23,6 +23,7 @@
     "superagent": "^8.0.0",
     "supertest": "^6.2.4",
     "ta.js": "^1.11.1",
+    "volatility": "^0.2.1",
     "yahoo-stock": "github:twhtanghk/yahoo-stock"
   },
   "dependencies": {
