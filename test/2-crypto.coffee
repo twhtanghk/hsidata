@@ -20,5 +20,5 @@ describe 'binance', ->
       .pipe new Writable
         objectMode: true
         write: (data, encoding, callback) ->
-          console.log JSON.stringify data
+          # console.log JSON.stringify data
           callback()

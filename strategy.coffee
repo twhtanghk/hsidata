@@ -77,7 +77,7 @@ class OBV extends Strategy
       data.close
     ]
 
-    [..., lastobv]  =  obv @ind[-20..]
+    [..., lastobv]  =  await obv ind[-20..]
     _.extend data, obv: lastobv
 
     super data, encoding, callback
