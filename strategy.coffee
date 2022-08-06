@@ -1,6 +1,6 @@
 _ = require 'lodash'
 {Readable, Transform} = require 'stream'
-{ema} = require 'ta.js'
+{ema, obv} = require 'ta.js'
 volatility = require 'volatility'
 Binance = require('binance-api-node').default
 
@@ -63,6 +63,27 @@ class EMA extends Strategy
 
     # keep last 120 records only
     @df = @df[-120..]
+
+    callback null, data
+
+class OBV extends Strategy
+  _transform: (data, encoding, callback) ->
+
+    # extract volume
+    ind = @df.map ({close, volume}) ->
+      [volume, close]
+    ind.push [
+      data.volume
+      data.close
+    ]
+
+    [..., lastobv]  =  obv @ind[-20..]
+    _.extend data, obv: lastobv
+
+    super data, encoding, callback
+
+    # keep last record only
+    @df = @df[-20..]
 
     callback null, data
 
@@ -134,6 +155,7 @@ module.exports = {
   BinanceSrc
   Strategy
   EMA
+  OBV # On-balance volume
   Volatility
   EMACrossover
 }
