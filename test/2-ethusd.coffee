@@ -6,7 +6,7 @@ db = require('monk')(process.env.DB)
 
 describe 'hsi', ->
   it 'strategy', ->
-    (new MongoSrc symbol: '^hsi')
+    (new MongoSrc symbol: 'ETH/USD')
       .pipe new EMA()
       .pipe new EMACrossover()
       .on 'finish', ->

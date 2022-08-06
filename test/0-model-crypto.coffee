@@ -18,11 +18,11 @@ describe "Cryptocurrency", ->
           data =
             date: new Date obj.unix * 1000
             symbol: obj.symbol
-            open: obj.open
-            high: obj.high
-            low: obj.low
-            close: obj.close
-            volume: obj['Volume ETH']
+            open: parseFloat obj.open
+            high: parseFloat obj.high
+            low: parseFloat obj.low
+            close: parseFloat obj.close
+            volume: parseFloat obj['Volume ETH']
           await db
             .get 'price'
             .insert data

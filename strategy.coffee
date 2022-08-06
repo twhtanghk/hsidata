@@ -130,6 +130,30 @@ class EMACrossover extends Strategy
 
     callback null, data
   
+class MongoSrc extends Readable
+  constructor: ({symbol}) ->
+    super objectMode: true
+    db = require('monk')(process.env.DB)
+    @query = db
+      .get 'price'
+      .find {symbol}, sort: date: 1
+      .each (row, cursor) =>
+        @cursor = cursor
+        @emit 'data', row
+      .then =>
+        @emit 'end'
+        @cursor.close()
+        db.close()
+
+  _read: ->
+    @cursor.resume()
+
+  pause: ->
+    @cursor?.pause()
+
+  resume: ->
+    @cursor?.resume()
+
 class BinanceSrc extends Readable
   constructor: ({@symbol, @interval}) ->
     super objectMode: true
@@ -152,6 +176,7 @@ class BinanceSrc extends Readable
     @pause()
 
 module.exports = {
+  MongoSrc
   BinanceSrc
   Strategy
   EMA
