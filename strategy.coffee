@@ -4,10 +4,9 @@ _ = require 'lodash'
 volatility = require 'volatility'
 Binance = require('binance-api-node').default
 
-class Strategy extends Transform
+class Filter extends Transform
   start: null
   df: []
-  action: []
 
   constructor: ->
     super
@@ -18,17 +17,28 @@ class Strategy extends Transform
     @start ?= data.date
     @df.push data
 
+class Strategy extends Filter
+  action: []
+
+  constructor: ->
+    super()
+    @on 'finish', ->
+      [..., last] = @df
+      console.debug "#{@action.length} actions within #{@start} - #{last.date}: #{@analysis()}"
+
   buyRule: (data) ->
     @action.push
       action: 'buy'
       data: data
     @emit 'buy', data
+    console.debug "buy #{@analysis()} #{JSON.stringify data}"
 
   sellRule: (data) ->
     @action.push
       action: 'sell'
       data: data
     @emit 'sell', data
+    console.debug "sell #{@analysis()} #{JSON.stringify data}"
 
   analysis: ->
     sum = 0
@@ -40,7 +50,7 @@ class Strategy extends Transform
           sum += data.close
     sum
 
-class EMA extends Strategy
+class EMA extends Filter
   _transform: (data, encoding, callback) ->
 
     # extract close price
@@ -66,7 +76,7 @@ class EMA extends Strategy
 
     callback null, data
 
-class OBV extends Strategy
+class OBV extends Filter
   _transform: (data, encoding, callback) ->
 
     # extract volume
@@ -87,7 +97,7 @@ class OBV extends Strategy
 
     callback null, data
 
-class Volatility extends Strategy
+class Volatility extends Filter
   _transform: (data, encoding, callback) ->
 
     # extract close price
