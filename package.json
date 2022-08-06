@@ -18,6 +18,7 @@
   "homepage": "https://github.com/twhtanghk/hsidata#readme",
   "devDependencies": {
     "binance-api-node": "^0.11.41",
+    "csv": "^6.2.0",
     "mocha": "^10.0.0",
     "monk": "^7.3.4",
     "superagent": "^8.0.0",
