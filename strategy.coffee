@@ -1,6 +1,6 @@
 _ = require 'lodash'
 {Readable, Transform} = require 'stream'
-{ema, obv} = require 'ta.js'
+{ema, obv, vwap} = require 'ta.js'
 volatility = require 'volatility'
 Binance = require('binance-api-node').default
 
@@ -92,8 +92,42 @@ class OBV extends Filter
 
     super data, encoding, callback
 
-    # keep last record only
+    # keep last 20 records only
     @df = @df[-20..]
+
+    callback null, data
+
+# volume weighted average price
+class VWAP extends Filter
+  _transform: (data, encoding, callback) ->
+
+    # extract average price, volume
+    ind = @df.map ({high, low, close, volume}) ->
+      [
+        (high + low + close) / 3
+        volume
+      ]
+    {high, low, close, volume} = data
+    ind.push [
+      (high + low + close) / 3
+      volume
+    ]
+
+    # get vwap 20, 60, 120
+    [vwap20, vwap60, vwap120] = [
+      await vwap ind, 20
+      await vwap ind, 60
+      await vwap ind, 120
+    ]
+    _.extend data,
+      vwap20: vwap20[vwap20.length - 1]
+      vwap60: vwap60[vwap60.length - 1]
+      vwap120: vwap120[vwap120.length - 1]
+
+    super data, encoding, callback
+
+    # keep last 120 records only
+    @df = @df[-120..]
 
     callback null, data
 
@@ -191,6 +225,7 @@ module.exports = {
   Strategy
   EMA
   OBV # On-balance volume
+  VWAP # volume weighted average price
   Volatility
   EMACrossover
 }

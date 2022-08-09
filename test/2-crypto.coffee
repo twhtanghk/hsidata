@@ -1,5 +1,5 @@
 {Writable} = require 'stream'
-{BinanceSrc, EMA, OBV, Volatility, EMACrossover} = require '../strategy'
+{BinanceSrc, EMA, OBV, VWAP, Volatility, EMACrossover} = require '../strategy'
 
 describe 'binance', ->
   it 'ethbtc in 1m', ->
@@ -7,9 +7,10 @@ describe 'binance', ->
       .pipe new EMA()
       .pipe new Volatility()
       .pipe new OBV()
+      .pipe new VWAP()
       .pipe new EMACrossover()
       .pipe new Writable
         objectMode: true
         write: (data, encoding, callback) ->
-          # console.log JSON.stringify data
+          # console.log data
           callback()
