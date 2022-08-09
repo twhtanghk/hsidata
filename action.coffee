@@ -1,7 +1,19 @@
-{Writable} = require 'stream'
-{Strategy, BinanceSrc, EMA, VWAP, EMACrossover, VWAPCrossover} = require '../strategy'
+{Strategy} = require './strategy'
 
-class EMAAction extends Strategy
+class EMA extends Strategy
+  _transform: (data, encoding, callback) ->
+    super data, encoding, callback
+    # keep last record only
+    @df = @df[-1..]
+
+    if data.emaCrossover == 1
+      @buyRule data
+    else if data.emaCrossover == -1
+      @sellRule data
+
+    callback null, data
+
+class EMA_VWAP extends Strategy
   _transform: (data, encoding, callback) ->
     super data, encoding, callback
     # keep last 20 records only
@@ -14,7 +26,6 @@ class EMAAction extends Strategy
       res = 0
       for {emaCrossover, vwapCrossover} in ind by -1
         res += emaCrossover + vwapCrossover
-        console.log "res=#{res}"
         # res should fall between [-2..2]
         if res == 2
           @buyRule data
@@ -29,17 +40,7 @@ class EMAAction extends Strategy
 
     callback null, data
 
-describe 'binance', ->
-  it 'ethbtc in 1m', ->
-    new BinanceSrc {symbol: 'ETHBUSD', interval: '1m'}
-      .pipe new EMA()
-      .pipe new VWAP()
-      .pipe new EMACrossover()
-      .pipe new VWAPCrossover()
-      .pipe new EMAAction()
-      .pipe new Writable
-        objectMode: true
-        write: (data, encoding, callback) ->
-          console.log data
-          callback()
-      .on 'error', console.error
+module.exports = {
+  EMA
+  EMA_VWAP
+}
