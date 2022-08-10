@@ -73,7 +73,7 @@ class MongoSrc extends Readable
     @cursor?.resume()
 
 class BinanceSrc extends Readable
-  constructor: ({@symbol, @interval}) ->
+  constructor: ({@symbol, @interval, @capital}) ->
     super objectMode: true
 
     @client = Binance
@@ -81,6 +81,7 @@ class BinanceSrc extends Readable
       apiSecret: process.env.BINSECRET
     @client.ws.candles @symbol, @interval, (candle) =>
       {eventTime, open, high, low, close, volume, isFinal} = candle
+      @rate = parseFloat close
       if isFinal
         @emit 'data',
           date: new Date eventTime
@@ -94,8 +95,19 @@ class BinanceSrc extends Readable
   read: (size) ->
     @pause()
 
+  holding: ->
+    @rate ?= parseFloat (await @client.avgPrice symbol: @symbol).price
+    [src, dst] = @capital
+    if src.amount * @rate > dst.amount
+      src
+    else
+      dst
+    
   allOrders: (opts) ->
     await @client.allOrders _.defaults(symbol: @symbol, opts)
+
+  myTrades: (opts) ->
+    await @client.myTrades _.defaults(symbol: @symbol, opts)
 
   orderTest: (opts) ->
     await @client.orderTest _.defaults(symbol: @symbol, opts)

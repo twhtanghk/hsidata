@@ -1,13 +1,27 @@
-{Writable} = require 'stream'
 {BinanceSrc} = require '../strategy'
-{EMA, VWAP, Volatility, EMACrossover, VWAPCrossover} = require '../filter'
-action = require '../action'
 
 describe 'binance', ->
+  binance = new BinanceSrc 
+    symbol: 'ETHBUSD'
+    interval: '1m'
+    capital: [
+      {amount: 0, unit: 'ETH'}
+      {amount: 100, unit: 'BUSD'}
+    ]
+  
+  it 'get all orders', ->
+    console.log await binance.allOrders()
+
+  it 'get all trades (sucess orders)', ->
+    console.log await binance.myTrades()
+
+  it 'holding', ->
+    console.log await binance.holding()
+
   it 'order test', ->
-    binance = new BinanceSrc {symbol: 'ETHBUSD', interval: '1m'}
-    console.log await binance
+    console.log (await binance
       .orderTest
         side: 'BUY'
         quantity: '1'
         price: '1780'
+    )
