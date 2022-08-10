@@ -6,6 +6,7 @@ action = require '../action'
 describe 'binance', ->
   it 'ethbtc in 1m', ->
     new BinanceSrc {symbol: 'ETHBUSD', interval: '1m'}
+      .on 'data', console.log
       .pipe new EMA()
       .pipe new EMACrossover()
       .pipe new Volatility()
@@ -13,6 +14,6 @@ describe 'binance', ->
       .pipe new Writable
         objectMode: true
         write: (data, encoding, callback) ->
-          # console.log data
+          console.log data
           callback()
       .on 'error', console.error

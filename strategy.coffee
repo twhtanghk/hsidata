@@ -94,6 +94,12 @@ class BinanceSrc extends Readable
   read: (size) ->
     @pause()
 
+  allOrders: (opts) ->
+    await @client.allOrders _.defaults(symbol: @symbol, opts)
+
+  orderTest: (opts) ->
+    await @client.orderTest _.defaults(symbol: @symbol, opts)
+
 module.exports = {
   Filter
   Strategy
