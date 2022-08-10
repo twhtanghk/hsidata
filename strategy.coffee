@@ -80,15 +80,16 @@ class BinanceSrc extends Readable
       apiKey: process.env.BINAPI
       apiSecret: process.env.BINSECRET
     @client.ws.candles @symbol, @interval, (candle) =>
-      {eventTime, open, high, low, close, volume} = candle
-      @emit 'data',
-        date: new Date eventTime
-        open: parseFloat open
-        high: parseFloat high
-        low: parseFloat low
-        close: parseFloat close
-        volume: parseFloat volume
-        symbol: @symbol
+      {eventTime, open, high, low, close, volume, isFinal} = candle
+      if isFinal
+        @emit 'data',
+          date: new Date eventTime
+          open: parseFloat open
+          high: parseFloat high
+          low: parseFloat low
+          close: parseFloat close
+          volume: parseFloat volume
+          symbol: @symbol
 
   read: (size) ->
     @pause()

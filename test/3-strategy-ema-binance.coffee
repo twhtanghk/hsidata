@@ -1,6 +1,6 @@
 {Writable} = require 'stream'
 {BinanceSrc} = require '../strategy'
-{EMA, VWAP, EMACrossover, VWAPCrossover} = require '../filter'
+{EMA, VWAP, Volatility, EMACrossover, VWAPCrossover} = require '../filter'
 action = require '../action'
 
 describe 'binance', ->
@@ -8,10 +8,11 @@ describe 'binance', ->
     new BinanceSrc {symbol: 'ETHBUSD', interval: '1m'}
       .pipe new EMA()
       .pipe new EMACrossover()
+      .pipe new Volatility()
       .pipe new action.EMA()
       .pipe new Writable
         objectMode: true
         write: (data, encoding, callback) ->
-          console.log data
+          # console.log data
           callback()
       .on 'error', console.error
