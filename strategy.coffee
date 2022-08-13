@@ -73,6 +73,8 @@ class MongoSrc extends Readable
     @cursor?.resume()
 
 class BinanceSrc extends Readable
+  orders: []
+
   constructor: ({@symbol, @interval, @capital}) ->
     super objectMode: true
 
@@ -110,7 +112,11 @@ class BinanceSrc extends Readable
     await @client.myTrades _.defaults(symbol: @symbol, opts)
 
   orderTest: (opts) ->
+    console.log opts
     await @client.orderTest _.defaults(symbol: @symbol, opts)
+
+  order: (opts) ->
+    @orders.push await @client.order _.defaults(symbol: @symbol, opts)
 
 module.exports = {
   Filter

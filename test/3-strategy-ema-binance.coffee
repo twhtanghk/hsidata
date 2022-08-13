@@ -9,8 +9,8 @@ describe 'binance', ->
       symbol: 'ETHBUSD'
       interval: '1m'
       capital: [
-        {unit: 'ETH', amount: 0}
-        {unit: 'BUSD', amount: 100}
+        {unit: 'ETH', amount: 0.005}
+        {unit: 'BUSD', amount: 0}
       ]
     binance
       .pipe new EMA()
