@@ -22,28 +22,28 @@ class Strategy extends Filter
     super()
     @on 'finish', ->
       [..., last] = @df
-      trades = @exchange.listTrade {symbol: @symbol, startTime: @start}
-      console.debug "#{trades.length} actions within #{@start} - #{last.date}: #{@exchange.listProfitLoss {symbol: @symbol, startTime: @start}}"
+      trades = await @exchange.listTrade {symbol: @symbol, startTime: @start}
+      console.debug "#{trades.length} actions within #{@start} - #{last.date}: #{await @exchange.listProfitLoss {symbol: @symbol, startTime: @start}}"
 
   buy: (data) ->
-    {symbol, close} = data
-    if @capital[0].amount * close < @capital[1].amount
+    {date, symbol, close} = data
+    if date.getTime() > Date.now() and @capital[0].amount * close < @capital[1].amount
       await @exchange.orderTest
         symbol: symbol
         side: 'BUY'
         quantity: @capital[1].amount / close
         price: close
-    console.debug "buy #{await @exchange.listProfitLoss()} #{JSON.stringify data}"
+    console.log "buy #{JSON.stringify @capital} #{JSON.stringify data}"
 
   sell: (data) ->
-    {symbol, close} = data
-    if @capital[0].amount * close > @capital[1].amount
+    {date, symbol, close} = data
+    if date.getTime() > Date.now() and @capital[0].amount * close > @capital[1].amount
       await @exchange.orderTest
         symbol: symbol
         side: 'SELL'
         quantity: @capital[0].amount
         price: close
-    console.debug "sell #{await @exchange.listProfitLoss()} #{JSON.stringify data}"
+    console.debug "sell #{JSON.stringify @capital} #{JSON.stringify data}"
 
 class MongoSrc extends Readable
   constructor: ({symbol}) ->
