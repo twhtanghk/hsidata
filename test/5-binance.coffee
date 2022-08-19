@@ -1,12 +1,7 @@
-Binance = require('binance-api-node').default
 exchange = require '../exchange'
 
 describe 'binance', ->
-  connection = Binance
-    apiKey: process.env.BINAPI
-    apiSecret: process.env.BINSECRET
-
-  binance = new exchange.Binance {connection}
+  binance = new exchange.Binance {}
 
   it 'stream', (cb) ->
     binance

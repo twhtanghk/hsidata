@@ -38,8 +38,12 @@ class Exchange
     return
 
 class Binance extends Exchange
-  constructor: ({@connection}) ->
+  constructor: ({apiKey, apiSecret}) ->
     super()
+    apiKey ?= process.env.BINAPI
+    apiSecret ?= process.env.BINSECRET
+    client = require('binance-api-node').default
+    @connection = client {apiKey, apiSecret}
 
   stream: ({symbol, interval}) ->
     closeWS = null
