@@ -7,9 +7,9 @@ class EMA extends Strategy
     @df = @df[-1..]
 
     if data.emaCrossover == 1
-      @buyRule data
+      @buy data
     else if data.emaCrossover == -1
-      @sellRule data
+      @sell data
 
     callback null, data
 
@@ -28,10 +28,10 @@ class EMA_VWAP extends Strategy
         res += emaCrossover + vwapCrossover
         # res should fall between [-2..2]
         if res == 2
-          @buyRule data
+          @buy data
           break
         else if res == -2
-          @sellRule data
+          @sell data
           break
         else if res in [1, -1]
           continue

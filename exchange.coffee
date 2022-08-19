@@ -16,13 +16,16 @@ class Exchange
   cancelOrder: (opts) ->
     return
 
-  getOrder: ({symbol, orderId}) ->
+  getOrder: (opts) ->
     return
 
   listOrder: (opts) ->
     return
 
   listTrade: (opts) ->
+    return
+
+  listProfitLoss: (opts) ->
     return
 
   listDeposit: (opts) ->
@@ -38,6 +41,8 @@ class Exchange
     return
 
 class Binance extends Exchange
+  ws: {}
+
   constructor: ({apiKey, apiSecret}) ->
     super()
     apiKey ?= process.env.BINAPI
@@ -47,26 +52,43 @@ class Binance extends Exchange
 
   stream: ({symbol, interval}) ->
     closeWS = null
-    ret = new Readable
-      objectMode: true
-      construct: (cb) =>
-        closeWS = @connection.ws.candles symbol, interval, (candle) ->
-          {eventTime, open, high, low, close, volume, isFinal} = candle
-          if isFinal
-            ret.emit 'data',
-              date: new Date eventTime
+    @ws[symbol] = 
+      close: null
+      stream: new Readable
+        objectMode: true
+        construct: (cb) =>
+          # historical data
+          for i in (await @candles {symbol, interval}).slice -60
+            {openTime, open, high, low, close, volume} = i
+            @ws[symbol].stream.emit 'data',
+              date: new Date openTime
               open: parseFloat open
               high: parseFloat high
               low: parseFloat low
               close: parseFloat close
               volume: parseFloat volume
-              symbol: symbol
-        cb() 
-      destroy: (err, cb) ->
-        closeWS()
-        cb()
-      read: ->
-        @pause()
+          # realtime data
+          @ws[symbol].close = @connection.ws.candles symbol, interval, (candle) =>
+            {eventTime, open, high, low, close, volume, isFinal} = candle
+            if isFinal
+              @ws[symbol].stream.emit 'data',
+                date: new Date eventTime
+                open: parseFloat open
+                high: parseFloat high
+                low: parseFloat low
+                close: parseFloat close
+                volume: parseFloat volume
+                symbol: symbol
+          cb() 
+        destroy: (err, cb) =>
+          @ws[symbol].close()
+          cb()
+        read: ->
+          @pause()
+    @ws[symbol].stream
+
+  candles: (opts) ->
+    await @connection.candles opts
 
   price: ({symbol}) ->
     await @connection.avgPrice {symbol}
@@ -75,7 +97,17 @@ class Binance extends Exchange
     await @connection.orderTest {symbol, side, quantity, price}
 
   order: ({symbol, side, quantity, price}) ->
-    await @connection.order {symbol, side, quantity, price}
+    ret = await @connection.order {symbol, side, quantity, price}
+    {orderId} = ret
+    poll = null
+    isFilled = =>
+      order = await @getOrder {symbol, orderId}
+      {status} = order
+      if status in ['FILLED', 'CANCELLED']
+        clearInterval poll
+        @ws[symbol].emit 'orderFilled', order
+    poll = setInterval isFilled, 3000
+    ret
 
   cancelOrder: ({symbol, orderId}) ->
     await @connection.cancelOrder {symbol, orderId}
@@ -86,8 +118,23 @@ class Binance extends Exchange
   listOrder: ({symbol}) ->
     await @connection.allOrders {symbol}
 
-  listTrade: ({symbol}) ->
-    await @connection.myTrades {symbol}
+  listTrade: (opts) ->
+    {symbol, startTime} = opts
+    startTime = startTime.getTime()
+    await @connection.myTrades {symbol, startTime}
+
+  listProfitLoss: (opts) ->
+    {symbol, startTime} = opts
+    sum = 0
+    for trade in await @listTrade {symbol, startTime}
+      {orderId, price, qty} = trade
+      {side} = await @connection.getOrder {symbol, orderId}
+      switch side
+        when 'BUY'
+          sum -= price * qty
+        when 'SELL'
+          sum += price * qty
+    sum
 
   listDeposit: ->
     await @connection.depositHistory status: 1

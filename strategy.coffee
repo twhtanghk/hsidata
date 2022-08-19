@@ -18,35 +18,32 @@ class Filter extends Transform
 class Strategy extends Filter
   action: []
 
-  constructor: ->
+  constructor: ({@exchange, @symbol, @capital}) ->
     super()
     @on 'finish', ->
       [..., last] = @df
-      console.debug "#{@action.length} actions within #{@start} - #{last.date}: #{@analysis()}"
+      trades = @exchange.listTrade {symbol: @symbol, startTime: @start}
+      console.debug "#{trades.length} actions within #{@start} - #{last.date}: #{@exchange.listProfitLoss {symbol: @symbol, startTime: @start}}"
 
-  buyRule: (data) ->
-    @action.push
-      action: 'buy'
-      data: data
-    @emit 'buy', data
-    console.debug "buy #{@analysis()} #{JSON.stringify data}"
+  buy: (data) ->
+    {symbol, close} = data
+    if @capital[0].amount * close < @capital[1].amount
+      await @exchange.orderTest
+        symbol: symbol
+        side: 'BUY'
+        quantity: @capital[1].amount / close
+        price: close
+    console.debug "buy #{await @exchange.listProfitLoss()} #{JSON.stringify data}"
 
-  sellRule: (data) ->
-    @action.push
-      action: 'sell'
-      data: data
-    @emit 'sell', data
-    console.debug "sell #{@analysis()} #{JSON.stringify data}"
-
-  analysis: ->
-    sum = 0
-    for {action, data} in @action
-      switch action
-        when 'buy'
-          sum -= data.close
-        when 'sell'
-          sum += data.close
-    sum
+  sell: (data) ->
+    {symbol, close} = data
+    if @capital[0].amount * close > @capital[1].amount
+      await @exchange.orderTest
+        symbol: symbol
+        side: 'SELL'
+        quantity: @capital[0].amount
+        price: close
+    console.debug "sell #{await @exchange.listProfitLoss()} #{JSON.stringify data}"
 
 class MongoSrc extends Readable
   constructor: ({symbol}) ->
@@ -72,55 +69,8 @@ class MongoSrc extends Readable
   resume: ->
     @cursor?.resume()
 
-class BinanceSrc extends Readable
-  orders: []
-
-  constructor: ({@symbol, @interval, @capital}) ->
-    super objectMode: true
-
-    @client = Binance
-      apiKey: process.env.BINAPI
-      apiSecret: process.env.BINSECRET
-    @client.ws.candles @symbol, @interval, (candle) =>
-      {eventTime, open, high, low, close, volume, isFinal} = candle
-      @rate = parseFloat close
-      if isFinal
-        @emit 'data',
-          date: new Date eventTime
-          open: parseFloat open
-          high: parseFloat high
-          low: parseFloat low
-          close: parseFloat close
-          volume: parseFloat volume
-          symbol: @symbol
-
-  read: (size) ->
-    @pause()
-
-  holding: ->
-    @rate ?= parseFloat (await @client.avgPrice symbol: @symbol).price
-    [src, dst] = @capital
-    if src.amount * @rate > dst.amount
-      src
-    else
-      dst
-    
-  allOrders: (opts) ->
-    await @client.allOrders _.defaults(symbol: @symbol, opts)
-
-  myTrades: (opts) ->
-    await @client.myTrades _.defaults(symbol: @symbol, opts)
-
-  orderTest: (opts) ->
-    console.log opts
-    await @client.orderTest _.defaults(symbol: @symbol, opts)
-
-  order: (opts) ->
-    @orders.push await @client.order _.defaults(symbol: @symbol, opts)
-
 module.exports = {
   Filter
   Strategy
   MongoSrc
-  BinanceSrc
 }

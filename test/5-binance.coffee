@@ -11,6 +11,11 @@ describe 'binance', ->
         @destroy()
         cb()
 
+  it 'candles', ->
+    console.log await binance.candles
+      symbol: 'ETHBUSD'
+      interval: '1m'
+
   it 'orderTest', ->
     await binance.orderTest
       symbol: 'ETHBUSD'
@@ -22,7 +27,7 @@ describe 'binance', ->
     console.log await binance.listOrder symbol: 'ETHBUSD'
 
   it 'listTrade', ->
-    console.log await binance.listTrade symbol: 'ETHBUSD'
+    console.log await binance.listTrade symbol: 'ETHBUSD', startTime: new Date()
 
   it 'listDeposit', ->
     console.log await binance.listDeposit()
