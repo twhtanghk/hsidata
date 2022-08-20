@@ -1,20 +1,31 @@
 exchange = require '../exchange'
+addStream = require 'add-stream'
 
 describe 'binance', ->
   binance = new exchange.Binance {}
 
-  it 'stream', (cb) ->
+  it 'historical', (cb) ->
     binance
-      .stream symbol: 'ETHBUSD', interval: '1m'
-      .on 'data', (data) ->
-        console.log data
-        @destroy()
-        cb()
+      .historical
+        symbol: 'ETHBUSD'
+        interval: '1m'
+      .on 'data', console.log
+      .on 'end', cb
 
-  it 'candles', ->
-    console.log await binance.candles
+  it 'stream', (cb) ->
+    i = 0
+    opts = 
       symbol: 'ETHBUSD'
       interval: '1m'
+    historical = binance.historical opts
+    realtime = binance.stream opts
+    historical
+      .pipe addStream.obj realtime
+      .on 'data', (data) ->
+        console.log data
+        if ++i > 60
+          realtime.destroy()
+          cb()
 
   it 'orderTest', ->
     await binance.orderTest

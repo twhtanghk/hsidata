@@ -16,34 +16,16 @@ class Filter extends Transform
     @df.push data
 
 class Strategy extends Filter
-  action: []
-
-  constructor: ({@exchange, @symbol, @capital}) ->
+  constructor: ({@symbol}) ->
     super()
-    @on 'finish', ->
-      [..., last] = @df
-      trades = await @exchange.listTrade {symbol: @symbol, startTime: @start}
-      console.debug "#{trades.length} actions within #{@start} - #{last.date}: #{await @exchange.listProfitLoss {symbol: @symbol, startTime: @start}}"
 
   buy: (data) ->
-    {date, symbol, close} = data
-    if date.getTime() > Date.now() and @capital[0].amount * close < @capital[1].amount
-      await @exchange.orderTest
-        symbol: symbol
-        side: 'BUY'
-        quantity: @capital[1].amount / close
-        price: close
-    console.log "buy #{JSON.stringify @capital} #{JSON.stringify data}"
+    @emit 'buy', data
+    console.log "buy #{JSON.stringify data}"
 
   sell: (data) ->
-    {date, symbol, close} = data
-    if date.getTime() > Date.now() and @capital[0].amount * close > @capital[1].amount
-      await @exchange.orderTest
-        symbol: symbol
-        side: 'SELL'
-        quantity: @capital[0].amount
-        price: close
-    console.debug "sell #{JSON.stringify @capital} #{JSON.stringify data}"
+    @emit 'sell', data
+    console.debug "sell #{JSON.stringify data}"
 
 class MongoSrc extends Readable
   constructor: ({symbol}) ->

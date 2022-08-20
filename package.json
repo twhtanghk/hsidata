@@ -17,9 +17,11 @@
   },
   "homepage": "https://github.com/twhtanghk/hsidata#readme",
   "devDependencies": {
+    "add-stream": "^1.0.0",
     "binance-api-node": "^0.11.41",
     "csv": "^6.2.0",
     "mocha": "^10.0.0",
+    "moment": "^2.29.4",
     "monk": "^7.3.4",
     "superagent": "^8.0.0",
     "supertest": "^6.2.4",

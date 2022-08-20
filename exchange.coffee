@@ -4,6 +4,9 @@ class Exchange
   stream: (opts) ->
     return
   
+  historical: (opts) ->
+    return
+
   price: (symbol) ->
     return
 
@@ -50,24 +53,13 @@ class Binance extends Exchange
     client = require('binance-api-node').default
     @connection = client {apiKey, apiSecret}
 
+  # realtime data stream
   stream: ({symbol, interval}) ->
-    closeWS = null
     @ws[symbol] = 
       close: null
       stream: new Readable
         objectMode: true
         construct: (cb) =>
-          # historical data
-          for i in (await @candles {symbol, interval}).slice -60
-            {openTime, open, high, low, close, volume} = i
-            @ws[symbol].stream.emit 'data',
-              date: new Date openTime
-              open: parseFloat open
-              high: parseFloat high
-              low: parseFloat low
-              close: parseFloat close
-              volume: parseFloat volume
-          # realtime data
           @ws[symbol].close = @connection.ws.candles symbol, interval, (candle) =>
             {eventTime, open, high, low, close, volume, isFinal} = candle
             if isFinal
@@ -87,8 +79,25 @@ class Binance extends Exchange
           @pause()
     @ws[symbol].stream
 
-  candles: (opts) ->
-    await @connection.candles opts
+  # historical stream
+  historical: ({symbol, interval}) ->
+    ret = new Readable
+      objectMode: true
+      construct: (cb) =>
+        for i in (await @connection.candles {symbol, interval}).slice -60
+          {openTime, open, high, low, close, volume} = i
+          ret.emit 'data',
+            date: new Date openTime
+            open: parseFloat open
+            high: parseFloat high
+            low: parseFloat low
+            close: parseFloat close
+            volume: parseFloat volume
+            symbol: symbol
+        ret.emit 'end'
+        cb()
+      read: ->
+        @pause()
 
   price: ({symbol}) ->
     await @connection.avgPrice {symbol}
