@@ -4,65 +4,65 @@ class Order
   #   {amount: 100, unit: 'BUSD'}
   # ]
   constructor: ({@exchange, @capital, @bus}) ->
+    @dryRun = not (process.env.DRYRUN? && process.env.DRYRUN == 'false')
     @bus
       .on 'buy', (data) =>
-        @buy data
+        if @dryRun || (Date.now() - data.date.getTime() < 1000 and not @dryRun)
+          @buy data
       .on 'sell', (data) =>
-        @sell data
+        if @dryRun || (Date.now() - data.date.getTime() < 1000 and not @dryRun)
+          @sell data
 
   usd: ->
     {price} = await exchange.price()
     price = parseFloat price
     capital[0].amount * price + capital[1].amount
 
+  updateCapital: (opts) ->
+    {symbol, side, quantity, price} = opts
+    switch side
+      when 'BUY'
+        @capital[0].amount = quantity
+        @capital[1].amount = 0
+      when 'SELL'
+        @capital[0].amount = 0
+        @capital[1].amount = quantity * price
+
+  order: (opts) ->
+    {symbol, side, quantity, price} = opts
+    if @dryRun
+      @updateCapital opts
+    else
+      try
+        {orderId} = ret = await @exchange.order opts
+        poll = null
+        isFilled = =>
+          {status} = order = await @exchange.getOrder {symbol, orderId}
+          if status in ['FILLED', 'CANCELLED']
+            clearInterval poll
+          if status == 'FILLED'
+            @updateCapital opts
+        poll = setInterval isFilled, 3000
+      catch err
+        console.error err
+    console.log @capital
+          
   buy: ({symbol, open, high, low, close, date}) ->
-    ret = null
     price = (high + low + close) / 3
     if @capital[0].amount * price < @capital[1].amount
-      try
-        {orderId} = ret = await @exchange.order
-          symbol: symbol
-          side: 'BUY'
-          quantity: @capital[1].amount / price
-          price: price
-        poll = null
-        isFilled = =>
-          {status} = order = await @getOrder {symbol, orderId}
-          if status in ['FILLED', 'CANCELLED']
-            clearInterval poll
-            @bus.emit 'order', order
-          if status == 'FILLED'
-            @capital[0].amount = @capital[1].amount / price
-            @capital[1].amount = 0
-            console.log "busd: #{await @usd()}"
-        poll = setInterval isFilled, 3000
-      catch err
-        console.error err
-    ret
+      await @order
+        symbol: symbol
+        side: 'BUY'
+        quantity: @capital[1].amount / price
+        price: price
      
   sell: ({symbol, open, high, low, close, date}) ->
-    ret = null
     price = (high + low + close) / 3
     if @capital[0].amount * price > @capital[1].amount
-      try
-        {orderId} = ret = await @exchange.order
-          symbol: symbol
-          side: 'SELL'
-          quantity: @capital[0].amount
-          price: price
-        poll = null
-        isFilled = =>
-          {status} = order = await @getOrder {symbol, orderId}
-          if status in ['FILLED', 'CANCELLED']
-            clearInterval poll
-            @bus.emit 'order', order
-          if status == 'FILLED'
-            @capital[1].amount = @capital[0].amount * price
-            @capital[0].amount = 0
-            console.log "busd: #{await @usd()}"
-        poll = setInterval isFilled, 3000
-      catch err
-        console.error err
-    ret
+      await @order
+        symbol: symbol
+        side: 'SELL'
+        quantity: @capital[0].amount
+        price: price
 
 module.exports = {Order}

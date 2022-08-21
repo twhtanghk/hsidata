@@ -8,14 +8,14 @@ binance = new exchange.Binance {}
 symbol = 'ETHBUSD'
 opts = 
   symbol: symbol
-  interval: '1m'
+  interval: '15m'
 historical = binance.historical opts
 realtime = binance.stream opts
 bus = new action.EMA symbol: symbol
 order = new Order
   exchange: binance
   capital: [
-    {amount: 1, unit: 'ETH'}
+    {amount: 0.05, unit: 'ETH'}
     {amount: 0, unit: 'BUSD'}
   ]
   bus: bus
@@ -27,4 +27,4 @@ historical
   .pipe new VWAP()
   .pipe new VWAPCrossover()
   .pipe bus
-  .on 'data', console.log
+  .on 'data', ->

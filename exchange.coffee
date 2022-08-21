@@ -84,7 +84,7 @@ class Binance extends Exchange
     ret = new Readable
       objectMode: true
       construct: (cb) =>
-        for i in (await @connection.candles {symbol, interval}).slice -60
+        for i in (await @connection.candles {symbol, interval})
           {openTime, open, high, low, close, volume} = i
           ret.emit 'data',
             date: new Date openTime
