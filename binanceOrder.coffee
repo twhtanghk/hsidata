@@ -27,4 +27,4 @@ historical
   .pipe new VWAP()
   .pipe new VWAPCrossover()
   .pipe bus
-  .on 'data', ->
+  .on 'data', console.log
