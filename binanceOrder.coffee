@@ -15,8 +15,8 @@ bus = new action.EMA symbol: symbol
 order = new Order
   exchange: binance
   capital: [
-    {amount: 0.05, unit: 'ETH'}
-    {amount: 0, unit: 'BUSD'}
+    {amount: 0, unit: 'ETH'}
+    {amount: 142.17225, unit: 'BUSD'}
   ]
   bus: bus
 historical

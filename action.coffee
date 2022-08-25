@@ -1,5 +1,19 @@
 {Strategy} = require './strategy'
 
+class Range extends Strategy
+  _transform: (data, encoding, callback) ->
+    super data, encoding, callback
+    @df = @df[-2..]
+    [last, curr] = @df
+    {low, high} = curr.range
+    limit = (high - low) * 0.25
+    if last.close < low + limit and curr.close > low + limit
+      @buy data
+    if last.close > high - limit and curr.close < high - limit
+      @sell data
+
+    callback null, data
+  
 class EMA extends Strategy
   _transform: (data, encoding, callback) ->
     super data, encoding, callback
@@ -43,4 +57,5 @@ class EMA_VWAP extends Strategy
 module.exports = {
   EMA
   EMA_VWAP
+  Range
 }

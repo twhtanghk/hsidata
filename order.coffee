@@ -7,16 +7,19 @@ class Order
     @dryRun = not (process.env.DRYRUN? && process.env.DRYRUN == 'false')
     @bus
       .on 'buy', (data) =>
-        if @dryRun || (Date.now() - data.date.getTime() < 1000 and not @dryRun)
+        console.log "order to buy #{Date.now() - data.date.getTime()} ms"
+        if @dryRun || (Date.now() - data.date.getTime() < 3000 and not @dryRun)
           @buy data
       .on 'sell', (data) =>
-        if @dryRun || (Date.now() - data.date.getTime() < 1000 and not @dryRun)
+        console.log "order to sell #{Date.now() - data.date.getTime()} ms"
+        if @dryRun || (Date.now() - data.date.getTime() < 3000 and not @dryRun)
           @sell data
 
-  usd: ->
-    {price} = await exchange.price()
+  value: ->
+    symbol = @capital[0].unit.concat @capital[1].unit
+    {price} = await @exchange.price {symbol}
     price = parseFloat price
-    capital[0].amount * price + capital[1].amount
+    @capital[0].amount * price + @capital[1].amount
 
   updateCapital: (opts) ->
     {symbol, side, quantity, price} = opts
@@ -53,7 +56,7 @@ class Order
       await @order
         symbol: symbol
         side: 'BUY'
-        quantity: @capital[1].amount / price
+        quantity: Math.trunc(@capital[1].amount / price * 1000) / 1000
         price: price
      
   sell: ({symbol, open, high, low, close, date}) ->

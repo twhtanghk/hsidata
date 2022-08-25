@@ -1,6 +1,6 @@
 {Filter} = require './strategy'
 _ = require 'lodash'
-{ema, obv, vwap} = require 'ta.js'
+{ema, obv, vwap, recent_low, recent_high} = require 'ta.js'
 volatility = require 'volatility'
 
 class EMA extends Filter
@@ -149,6 +149,23 @@ class VWAPCrossover extends Filter
 
     callback null, data
     
+class Range extends Filter
+  _transform: (data, encoding, callback) ->
+    close = @df.map ({close}) ->
+      close
+    close.push data.close
+
+    low = (await recent_low close, 20).value
+    high = (await recent_high close, 20).value
+    percent = (100 * (high - low) / data.close).toFixed(2)
+    _.extend data, range: {low, high, percent}
+
+    super data, encoding, callback
+
+    @df = @df[-20..]
+
+    callback null, data
+
 module.exports = {
   EMA
   OBV # On-balance volume
@@ -156,4 +173,5 @@ module.exports = {
   Volatility
   EMACrossover
   VWAPCrossover
+  Range
 }

@@ -46,8 +46,9 @@ class Exchange
 class Binance extends Exchange
   ws: {}
 
-  constructor: ({apiKey, apiSecret}) ->
+  constructor: (opts) ->
     super()
+    {apiKey, apiSecret} = opts ?= {}
     apiKey ?= process.env.BINAPI
     apiSecret ?= process.env.BINSECRET
     client = require('binance-api-node').default

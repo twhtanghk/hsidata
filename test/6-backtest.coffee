@@ -1,5 +1,5 @@
 exchange = require '../exchange'
-{EMA, VWAP, Volatility, EMACrossover, VWAPCrossover} = require '../filter'
+{EMA, EMACrossover, Range} = require '../filter'
 action = require '../action'
 {Order} = require '../order'
 
@@ -10,11 +10,11 @@ describe 'binance', ->
     symbol: symbol
     interval: '15m'
   capital = [
-    {amount: 0.05, unit: 'ETH'}
+    {amount: 0.1, unit: 'ETH'}
     {amount: 0, unit: 'BUSD'}
   ]
 
-  it 'historical', (cb) ->
+  it 'ema crossover', (cb) ->
     historical = binance.historical opts
     bus = new action.EMA symbol: symbol
     order = new Order
@@ -24,17 +24,25 @@ describe 'binance', ->
     historical
       .pipe new EMA()
       .pipe new EMACrossover()
-      .pipe new Volatility()
-      .pipe new VWAP()
-      .pipe new VWAPCrossover()
       .pipe bus
       .on 'data', ->
       .on 'end', ->
-        {price} = await binance.price {symbol}
-        if order.capital[1].amount != 0
-          order.capital[0].amount = order.capital[1].amount / price
-          order.capital[1].amount = 0
-        percent = 100 * order.capital[0].amount / capital[0].amount
+        console.log "result: #{await order.value symbol}"
         console.log order.capital
-        console.log "#{order.capital[0].amount}/#{capital[0].amount}: #{percent}%"
+        cb()
+
+  it 'range', (cb) ->
+    historical = binance.historical opts
+    bus = new action.Range symbol: symbol
+    order = new Order
+      exchange: binance
+      capital: JSON.parse JSON.stringify capital
+      bus: bus
+    historical
+      .pipe new Range()
+      .pipe bus
+      .on 'data', ->
+      .on 'end', ->
+        console.log "result: #{await order.value symbol}"
+        console.log order.capital
         cb()

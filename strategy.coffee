@@ -6,7 +6,7 @@ class Filter extends Transform
   start: null
   df: []
 
-  constructor: ->
+  constructor: (opts) ->
     super
       readableObjectMode: true
       writableObjectMode: true
@@ -16,8 +16,8 @@ class Filter extends Transform
     @df.push data
 
 class Strategy extends Filter
-  constructor: ({@symbol}) ->
-    super()
+  constructor: (opts) ->
+    super opts
 
   buy: (data) ->
     @emit 'buy', data
