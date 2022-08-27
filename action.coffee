@@ -5,12 +5,13 @@ class Range extends Strategy
     super data, encoding, callback
     @df = @df[-2..]
     [last, curr] = @df
-    {low, high} = curr.range
-    limit = (high - low) * 0.25
-    if last.close < last.range.high and curr.close >= high
-      @buy data
-    if last.close > last.range.low and curr.close <= low
-      @sell data
+    {low, high, percent} = curr.range
+    if percent > 1
+      limit = (high - low) * 0.25
+      if last.close <= last.range.low and curr.close > low
+        @buy data
+      if last.close >= last.range.high and curr.close < high
+        @sell data
 
     callback null, data
   

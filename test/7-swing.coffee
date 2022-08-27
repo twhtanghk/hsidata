@@ -88,8 +88,12 @@ describe 'swing trade', ->
 #      .pipe addStream.obj realtime
       .pipe new filter.Range()
       .pipe bus
+      .on 'buy', (data) ->
+         logger.info JSON.stringify order.capital
+      .on 'sell', (data) ->
+         logger.info JSON.stringify order.capital
       .on 'data', (data) ->
-        logger.info data
+        logger.debug data
       .on 'end', ->
         logger.info await order.value()
         logger.info order.capital
