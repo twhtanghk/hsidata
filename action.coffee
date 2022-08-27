@@ -7,9 +7,9 @@ class Range extends Strategy
     [last, curr] = @df
     {low, high} = curr.range
     limit = (high - low) * 0.25
-    if last.close < low + limit and curr.close > low + limit
+    if last.close < last.range.high and curr.close >= high
       @buy data
-    if last.close > high - limit and curr.close < high - limit
+    if last.close > last.range.low and curr.close <= low
       @sell data
 
     callback null, data

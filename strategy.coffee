@@ -1,3 +1,5 @@
+logger = require 'log4js'
+  .getLogger 'strategy'
 _ = require 'lodash'
 {Readable, Transform} = require 'stream'
 Binance = require('binance-api-node').default
@@ -21,11 +23,11 @@ class Strategy extends Filter
 
   buy: (data) ->
     @emit 'buy', data
-    console.log "buy #{JSON.stringify data}"
+    logger.info "buy #{JSON.stringify data}"
 
   sell: (data) ->
     @emit 'sell', data
-    console.debug "sell #{JSON.stringify data}"
+    logger.info "sell #{JSON.stringify data}"
 
 class MongoSrc extends Readable
   constructor: ({symbol}) ->

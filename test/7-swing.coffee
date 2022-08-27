@@ -1,3 +1,33 @@
+log4js = require 'log4js'
+log4js
+  .configure
+    appenders:
+      order:
+        type: 'file'
+        filename: 'order.log'
+      backtest:
+        type: 'file'
+        filename: 'backtest.log'
+      strategy:
+        type: 'file'
+        filename: 'strategy.log'
+      console:
+        type: 'console'
+    categories:
+      order:
+        appenders: ['order']
+        level: 'debug'
+      backtest:
+        appenders: ['backtest']
+        level: 'debug'
+      strategy:
+        appenders: ['strategy']
+        level: 'debug'
+      default:
+        appenders: ['console']
+        level: 'info'
+logger = log4js.getLogger 'backtest'
+
 addStream = require 'add-stream'
 {support, resistance, recent_low, recent_high} = require 'ta.js'
 {Binance} = require '../exchange'
@@ -30,7 +60,7 @@ describe 'swing trade', ->
           data = data[-count..]
           low = (await recent_low data, count).value
           high = (await recent_high data, count).value
-          console.log
+          logger.info
             date: date
             close: close
             recent_low: low
@@ -58,8 +88,10 @@ describe 'swing trade', ->
 #      .pipe addStream.obj realtime
       .pipe new filter.Range()
       .pipe bus
-      .on 'data', console.log
+      .on 'data', (data) ->
+        logger.info data
       .on 'end', ->
-        console.log order.capital
+        logger.info await order.value()
+        logger.info order.capital
         realtime.destroy()
         done()

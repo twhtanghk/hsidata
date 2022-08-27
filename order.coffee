@@ -1,3 +1,6 @@
+logger = require 'log4js'
+  .getLogger 'order'
+
 class Order
   # capital: [
   #   {amount: 0, unit: 'ETH'}
@@ -7,11 +10,11 @@ class Order
     @dryRun = not (process.env.DRYRUN? && process.env.DRYRUN == 'false')
     @bus
       .on 'buy', (data) =>
-        console.log "order to buy #{Date.now() - data.date.getTime()} ms"
+        logger.debug "order to buy #{Date.now() - data.date.getTime()} ms"
         if @dryRun || (Date.now() - data.date.getTime() < 3000 and not @dryRun)
           @buy data
       .on 'sell', (data) =>
-        console.log "order to sell #{Date.now() - data.date.getTime()} ms"
+        logger.debug "order to sell #{Date.now() - data.date.getTime()} ms"
         if @dryRun || (Date.now() - data.date.getTime() < 3000 and not @dryRun)
           @sell data
 
@@ -47,8 +50,8 @@ class Order
             @updateCapital opts
         poll = setInterval isFilled, 3000
       catch err
-        console.error err
-    console.log @capital
+        logger.error err
+    logger.info @capital
           
   buy: ({symbol, open, high, low, close, date}) ->
     price = (high + low + close) / 3
