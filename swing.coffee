@@ -58,8 +58,10 @@ historical
   .pipe bus
   .on 'buy', (data) ->
      logger.info JSON.stringify order.capital
+     exchange.buy data
   .on 'sell', (data) ->
      logger.info JSON.stringify order.capital
+     exchange.sell data
   .on 'data', (data) ->
      logger.debug data
   .on 'end', ->
