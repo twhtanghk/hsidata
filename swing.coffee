@@ -1,3 +1,4 @@
+_ = require 'lodash'
 log4js = require 'log4js'
 log4js
   .configure
@@ -58,10 +59,10 @@ historical
   .pipe bus
   .on 'buy', (data) ->
      logger.info JSON.stringify order.capital
-     exchange.buy data
+     logger.info order.buy data
   .on 'sell', (data) ->
      logger.info JSON.stringify order.capital
-     exchange.sell data
+     logger.info order.sell data
   .on 'data', (data) ->
      logger.debug data
   .on 'end', ->
