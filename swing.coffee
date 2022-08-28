@@ -5,9 +5,9 @@ log4js
       order:
         type: 'file'
         filename: 'log/order.log'
-      backtest:
+      swing:
         type: 'file'
-        filename: 'log/backtest.log'
+        filename: 'log/swing.log'
       strategy:
         type: 'file'
         filename: 'log/strategy.log'
@@ -17,8 +17,8 @@ log4js
       order:
         appenders: ['order']
         level: 'debug'
-      backtest:
-        appenders: ['backtest']
+      swing:
+        appenders: ['swing']
         level: 'debug'
       strategy:
         appenders: ['strategy']
