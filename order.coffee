@@ -36,6 +36,7 @@ class Order
 
   order: (opts) ->
     {symbol, side, quantity, price} = opts
+    logger.info opts
     if @dryRun
       @updateCapital opts
     else
@@ -54,7 +55,7 @@ class Order
     logger.info @capital
           
   buy: ({symbol, open, high, low, close, date}) ->
-    price = (high + low + close) / 3
+    price = ((high + low + close) / 3).toFixed 2
     if @capital[0].amount * price < @capital[1].amount
       await @order
         symbol: symbol
@@ -63,7 +64,7 @@ class Order
         price: price
      
   sell: ({symbol, open, high, low, close, date}) ->
-    price = (high + low + close) / 3
+    price = ((high + low + close) / 3).toFixed 2
     if @capital[0].amount * price > @capital[1].amount
       await @order
         symbol: symbol

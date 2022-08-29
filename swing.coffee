@@ -50,7 +50,7 @@ order = new Order
   exchange: exchange
   capital: [
     {amount: 0.1, unit: 'ETH'}
-    {amount: 0, unit: 'BUSD'}
+    {amount: , unit: 'BUSD'}
   ]
   bus: bus
 historical
