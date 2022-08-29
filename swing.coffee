@@ -50,19 +50,13 @@ order = new Order
   exchange: exchange
   capital: [
     {amount: 0.1, unit: 'ETH'}
-    {amount: , unit: 'BUSD'}
+    {amount: 0, unit: 'BUSD'}
   ]
   bus: bus
 historical
   .pipe addStream.obj realtime
   .pipe new filter.Range()
   .pipe bus
-  .on 'buy', (data) ->
-     logger.info JSON.stringify order.capital
-     logger.info order.buy data
-  .on 'sell', (data) ->
-     logger.info JSON.stringify order.capital
-     logger.info order.sell data
   .on 'data', (data) ->
      logger.debug data
   .on 'end', ->
