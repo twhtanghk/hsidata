@@ -1,6 +1,6 @@
 {Filter} = require './strategy'
 _ = require 'lodash'
-{ema, obv, vwap, recent_low, recent_high} = require 'ta.js'
+{ema, obv, vwap, recent_low, recent_high, macd} = require 'ta.js'
 volatility = require 'volatility'
 
 class EMA extends Filter
@@ -166,6 +166,34 @@ class Range extends Filter
 
     callback null, data
 
+class MACD extends Filter
+  _transform: (data, encoding, callback) ->
+    close = @df.map ({close}) ->
+      close
+    close.push data.close
+
+    _.extend data, macd: await macd close
+
+    super data, encoding, callback
+
+    @df = @df[-26..]
+
+    callback null, data
+
+class RSI extends Filter
+  _transform: (data, encoding, callback) ->
+    close = @df.map ({close}) ->
+      close
+    close.push data.close
+
+    _.extend data, rsi: await rsi close
+
+    super data, encoding, callback
+
+    @df = @df[-14..]
+
+    callback null, data
+
 module.exports = {
   EMA
   OBV # On-balance volume
@@ -174,4 +202,6 @@ module.exports = {
   EMACrossover
   VWAPCrossover
   Range
+  MACD
+  RSI
 }

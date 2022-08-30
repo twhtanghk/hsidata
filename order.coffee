@@ -37,19 +37,10 @@ class Order
   order: (opts) ->
     {symbol, side, quantity, price} = opts
     logger.info opts
-    if @dryRun
-      @updateCapital opts
-    else
+    @updateCapital opts
+    if not @dryRun
       try
         {orderId} = ret = await @exchange.order opts
-        poll = null
-        isFilled = =>
-          {status} = order = await @exchange.getOrder {symbol, orderId}
-          if status in ['FILLED', 'CANCELLED']
-            clearInterval poll
-          if status == 'FILLED'
-            @updateCapital opts
-        poll = setInterval isFilled, 3000
       catch err
         logger.error err
     logger.info @capital

@@ -1,5 +1,17 @@
 {Strategy} = require './strategy'
 
+class MACD extends Strategy
+  _transform: (data, encoding, callback) ->
+    super data, encoding, callback
+    @df = @df[-2..]
+    [last, curr] = @df
+    if last.macd[0] > last.macd[1] and curr.macd[0] <= curr.macd[1]
+      @buy data
+    if last.macd[0] < last.macd[1] and curr.macd[0] >= curr.macd[1]
+      @sell data
+
+    callback null, data
+
 class Range extends Strategy
   _transform: (data, encoding, callback) ->
     super data, encoding, callback
@@ -59,4 +71,5 @@ module.exports = {
   EMA
   EMA_VWAP
   Range
+  MACD
 }

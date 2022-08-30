@@ -4,13 +4,13 @@ log4js
     appenders:
       order:
         type: 'file'
-        filename: 'order.log'
+        filename: 'log/order.log'
       backtest:
         type: 'file'
-        filename: 'backtest.log'
+        filename: 'log/backtest.log'
       strategy:
         type: 'file'
-        filename: 'strategy.log'
+        filename: 'log/strategy.log'
       console:
         type: 'console'
     categories:
@@ -85,13 +85,8 @@ describe 'swing trade', ->
       ]
       bus: bus
     historical
-#      .pipe addStream.obj realtime
       .pipe new filter.Range()
       .pipe bus
-      .on 'buy', (data) ->
-         logger.info JSON.stringify order.capital
-      .on 'sell', (data) ->
-         logger.info JSON.stringify order.capital
       .on 'data', (data) ->
         logger.debug data
       .on 'end', ->
